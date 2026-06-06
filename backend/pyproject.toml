@@ -1,0 +1,19 @@
+[project]
+name = "edureg-backend"
+version = "0.1.0"
+description = "FastAPI backend for EduReg Agent"
+requires-python = ">=3.11"
+dependencies = [
+  "fastapi",
+  "uvicorn[standard]",
+  "pydantic-settings",
+  "sqlalchemy",
+  "psycopg2-binary",
+  "qdrant-client",
+  "python-multipart",
+  "httpx",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["app*"]
