@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
+from app.api.documents import router as documents_router
 from app.core.config import settings
 from app.db import models as _models
 from app.db.session import Base, engine
@@ -15,6 +16,8 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
 
 
 app = FastAPI(title="EduReg Agent API", version="0.1.0", lifespan=lifespan)
+app.include_router(documents_router)
+
 
 @app.get("/health")
 def health_check() -> dict[str, str]:
