@@ -12,6 +12,9 @@ dependencies = [
   "qdrant-client",
   "python-multipart",
   "httpx",
+  "pypdf",
+  "python-docx",
+  "beautifulsoup4",
 ]
 
 [tool.setuptools.packages.find]
