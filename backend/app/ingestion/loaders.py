@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from pathlib import Path
+import re
 
 from app.ingestion.chunker import normalize_text
 
@@ -54,6 +55,7 @@ def _load_pdf_file(path: Path, metadata: dict) -> list[LoadedPage]:
 
     for page_index, page in enumerate(reader.pages, start=1):
         text = normalize_text(page.extract_text() or "")
+        text = _clean_pdf_formula_artifacts(text, page_number=page_index)
         if not text:
             continue
 
@@ -64,6 +66,40 @@ def _load_pdf_file(path: Path, metadata: dict) -> list[LoadedPage]:
         )
 
     return pages
+
+
+def _clean_pdf_formula_artifacts(text: str, page_number: int | None = None) -> str:
+    def replace_formula_block(match: re.Match[str]) -> str:
+        prefix = match.group("prefix")
+        formula_block = match.group("formula")
+        suffix = match.group("suffix")
+
+        if not _looks_like_broken_formula(formula_block):
+            return match.group(0)
+
+        page_hint = f", trang {page_number}" if page_number is not None else ""
+        placeholder = f"[Công thức toán học trong tài liệu gốc{page_hint}]"
+        return f"{prefix}\n\n{placeholder}\n\n{suffix}"
+
+    cleaned = re.sub(
+        r"(?P<prefix>công thức sau:\s*)\n+(?P<formula>.*?)(?P<suffix>\nTrong đó:)",
+        replace_formula_block,
+        text,
+        flags=re.IGNORECASE | re.DOTALL,
+    )
+    return normalize_text(cleaned)
+
+
+def _looks_like_broken_formula(text: str) -> bool:
+    lines = [line.strip() for line in text.splitlines() if line.strip()]
+    if not lines:
+        return False
+
+    private_use_chars = sum(1 for char in text if "\uf000" <= char <= "\uf8ff")
+    math_chars = sum(1 for char in text if char in "∑Σ=×*/+-")
+    short_lines = sum(1 for line in lines if len(line) <= 6)
+
+    return private_use_chars > 0 or (math_chars >= 2 and short_lines >= 3)
 
 
 def _load_docx_file(path: Path, metadata: dict) -> list[LoadedPage]:
