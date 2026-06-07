@@ -5,6 +5,8 @@ services:
       - "8000:8000"
     env_file:
       - .env
+    volumes:
+      - ./data:/data
     depends_on:
       - postgres
       - qdrant
@@ -17,7 +19,7 @@ services:
       - backend
 
   postgres:
-    image: postgres:16http://localhost:8000/docsFrontend:%20%20%20%20%20%20%20%20http://localhost:8501Qdrant:%20%20%20%20%20%20%20%20%20%20http://local
+    image: postgres:16
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -34,6 +36,13 @@ services:
       - "6334:6334"
     volumes:
       - qdrant_data:/qdrant/storage
+
+  adminer:
+    image: adminer:4
+    ports:
+      - "8081:8080"
+    depends_on:
+      - postgres
 
 volumes:
   postgres_data:
